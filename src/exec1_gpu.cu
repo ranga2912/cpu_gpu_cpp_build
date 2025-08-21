@@ -54,6 +54,7 @@ int main() {
     cudaFree(d_result);
     
     // Print the GPU result
+    //
     std::cout << "=== GPU Addition Demo ===" << std::endl;
     std::cout << "GPU calculation: " << variable1 << " + " << variable2 << " = " << result << std::endl;
     std::cout << "GPU acceleration working!" << std::endl;
