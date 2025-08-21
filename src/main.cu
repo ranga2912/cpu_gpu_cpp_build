@@ -3,10 +3,7 @@
 
 // GPU kernel to perform addition
 __global__ void addGPU(int* a, int* b, int* result) {
-    int idx = threadIdx.x;
-    if (idx == 0) {  // Only one thread needs to do this simple operation
-        *result = *a + *b;
-    }
+    *result = *a + *b;
 }
 
 // Error checking macro
@@ -20,44 +17,41 @@ __global__ void addGPU(int* a, int* b, int* result) {
         } \
     } while(0)
 
-int main() {
-    // Declare and initialize the variables
-    int variable1 = 5000;
-    int variable2 = 10000;
-    
-    // GPU calculation ONLY
+// Function to perform addition on GPU
+int addOnGPU(int a, int b) {
     int *d_a, *d_b, *d_result;
-    int result;
-    
-    // Allocate GPU memory
+    int result = 0;  // Initialize to avoid undefined behavior
+
     CUDA_CHECK(cudaMalloc(&d_a, sizeof(int)));
     CUDA_CHECK(cudaMalloc(&d_b, sizeof(int)));
     CUDA_CHECK(cudaMalloc(&d_result, sizeof(int)));
-    
-    // Copy data to GPU
-    CUDA_CHECK(cudaMemcpy(d_a, &variable1, sizeof(int), cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(d_b, &variable2, sizeof(int), cudaMemcpyHostToDevice));
-    
-    // Launch GPU kernel
+
+    CUDA_CHECK(cudaMemcpy(d_a, &a, sizeof(int), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_b, &b, sizeof(int), cudaMemcpyHostToDevice));
+
     addGPU<<<1, 1>>>(d_a, d_b, d_result);
     CUDA_CHECK(cudaGetLastError());
-    
-    // Wait for GPU to finish
     CUDA_CHECK(cudaDeviceSynchronize());
-    
-    // Copy result back from GPU
+
     CUDA_CHECK(cudaMemcpy(&result, d_result, sizeof(int), cudaMemcpyDeviceToHost));
-    
-    // Free GPU memory
-    cudaFree(d_a);
-    cudaFree(d_b);
-    cudaFree(d_result);
-    
-    // Print the GPU result
-    //
+
+    CUDA_CHECK(cudaFree(d_a));
+    CUDA_CHECK(cudaFree(d_b));
+    CUDA_CHECK(cudaFree(d_result));
+
+    return result;
+}
+
+int main() {
+    int variable1 = 5000 ;
+    int variable2 = 10000;
+    int sum;
+
+    // Use GPU calculation
+    sum = addOnGPU(variable1, variable2);
     std::cout << "=== GPU Addition Demo ===" << std::endl;
-    std::cout << "GPU calculation: " << variable1 << " + " << variable2 << " = " << result << std::endl;
+    std::cout << "GPU calculation: " << variable1 << " + " << variable2 << " = " << sum << std::endl;
     std::cout << "GPU acceleration working!" << std::endl;
-    
+
     return 0;
 }
